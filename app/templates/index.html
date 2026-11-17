@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AegisVault | Zero-Knowledge Digital Will</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <header class="border-b border-slate-700 pb-4 mb-8 flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-emerald-400">🛡️ AegisVault</h1>
+        <p class="text-slate-400 text-sm">Zero-Knowledge Split-Key Digital Will & Emergency Dead-Man's Switch</p>
+      </div>
+      <span class="bg-slate-800 border border-emerald-500/40 text-emerald-300 text-xs px-3 py-1.5 rounded-full">
+        AES-128-CBC + XOR Split-Key Active
+      </span>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- LEFT PANEL: PERSONA 1 (VAULT OWNER) -->
+      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+        <h2 class="text-xl font-semibold text-sky-400 mb-1">👤 Persona 1: Vault Owner Portal</h2>
+        <p class="text-xs text-slate-400 mb-4">Encrypt plain-text passwords & set your Dead-Man's Switch timer.</p>
+
+        <form id="createForm" class="space-y-3">
+          <input type="text" name="vault_id" placeholder="Vault ID (e.g., family-vault-01)" required
+            class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="email" name="owner_email" placeholder="Your Email" required
+              class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
+            <input type="email" name="beneficiary_email" placeholder="Beneficiary Email" required
+              class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
+          </div>
+          <textarea name="secret" rows="3" placeholder="Enter Plain-Text Passwords, Bank PINs & Emergency Instructions..." required
+            class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm"></textarea>
+          <div>
+            <label class="text-xs text-slate-400">Dead-Man's Switch Timer (Seconds for Expo Demo):</label>
+            <input type="number" name="timeout_sec" value="25" required
+              class="w-full p-2 rounded bg-slate-900 border border-slate-700 text-sm mt-1">
+          </div>
+          <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 font-semibold py-2.5 rounded transition">
+            🔒 Encrypt & Lock Vault
+          </button>
+        </form>
+
+        <!-- Share B Output Box -->
+        <div id="ownerResult" class="hidden mt-4 p-4 bg-slate-900 border border-amber-500/50 rounded-lg text-xs space-y-2">
+          <p class="text-amber-400 font-semibold">⚠️ SAVE OFFLINE KEY SHARE B (Give to Beneficiary):</p>
+          <code id="shareBBox" class="block bg-black p-2 rounded text-emerald-400 break-all select-all"></code>
+          <p class="text-slate-400">Server only holds Share A. Without Share B above, decryption is mathematically impossible.</p>
+        </div>
+
+        <!-- Live Heartbeat Controls -->
+        <div class="mt-6 pt-4 border-t border-slate-700 flex items-center justify-between">
+          <div>
+            <span class="text-xs text-slate-400 block">Live Switch Status:</span>
+            <span id="liveTimer" class="text-lg font-bold text-slate-300">No Active Vault</span>
+          </div>
+          <button id="checkinBtn" onclick="sendCheckin()"
+            class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded font-semibold text-sm transition">
+            💓 I'm Alive (Reset Timer)
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: PERSONA 2 (BENEFICIARY) -->
+      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg flex flex-col justify-between">
+        <div>
+          <h2 class="text-xl font-semibold text-purple-400 mb-1">🔑 Persona 2: Beneficiary Emergency Portal</h2>
+          <p class="text-xs text-slate-400 mb-4">Attempt to unlock emergency instructions using offline Key Share B.</p>
+
+          <form id="unlockForm" class="space-y-3">
+            <input type="text" id="unlockVaultId" name="vault_id" placeholder="Enter Vault ID" required
+              class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
+            <input type="text" name="share_b" placeholder="Paste Offline Key Share B" required
+              class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
+            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 font-semibold py-2.5 rounded transition">
+              🔓 Attempt Emergency Unlock
+            </button>
+          </form>
+
+          <div id="unlockResult" class="hidden mt-6 p-4 rounded-lg text-sm"></div>
+        </div>
+
+        <div class="mt-6 p-3 bg-slate-900/70 rounded border border-slate-700 text-xs text-slate-400">
+          <strong>Zero-Knowledge Security Proof:</strong> Try clicking <em>Attempt Emergency Unlock</em> while the timer on the left is still counting down. The server will block access (`403 ACCESS DENIED`) even if you have the right key!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentVaultId = "";
+    let pollInterval = null;
+
+    document.getElementById("createForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      currentVaultId = formData.get("vault_id");
+      document.getElementById("unlockVaultId").value = currentVaultId;
+
+      const res = await fetch("/vault/create", { method: "POST", body: formData });
+      const data = await res.json();
+
+      document.getElementById("ownerResult").classList.remove("hidden");
+      document.getElementById("shareBBox").innerText = data.beneficiary_key_share_B;
+
+      if (pollInterval) clearInterval(pollInterval);
+      pollStatus();
+      pollInterval = setInterval(pollStatus, 1000);
+    };
+
+    async function pollStatus() {
+      if (!currentVaultId) return;
+      const res = await fetch(`/vault/${currentVaultId}/status`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const timerEl = document.getElementById("liveTimer");
+      if (data.status === "ACTIVE") {
+        timerEl.innerText = `🟢 ACTIVE (${data.seconds_remaining}s remaining)`;
+        timerEl.className = "text-lg font-bold text-emerald-400";
+      } else {
+        timerEl.innerText = `🔴 EXPIRED — SWITCH TRIGGERED!`;
+        timerEl.className = "text-lg font-bold text-rose-500 animate-pulse";
+      }
+    }
+
+    async function sendCheckin() {
+      if (!currentVaultId) return alert("Create a vault first!");
+      await fetch(`/vault/${currentVaultId}/checkin`, { method: "POST" });
+      pollStatus();
+    }
+
+    document.getElementById("unlockForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const vaultId = formData.get("vault_id");
+      const res = await fetch(`/vault/${vaultId}/unlock`, { method: "POST", body: formData });
+      const data = await res.json();
+      const box = document.getElementById("unlockResult");
+      box.classList.remove("hidden");
+
+      if (res.ok) {
+        box.className = "mt-6 p-4 rounded-lg bg-emerald-950 border border-emerald-500 text-emerald-200";
+        box.innerHTML = `<strong>✅ VAULT UNLOCKED (Plain-Text Restored):</strong><pre class="mt-2 p-2 bg-black rounded text-white whitespace-pre-wrap">${data.decrypted_secrets}</pre>`;
+      } else {
+        box.className = "mt-6 p-4 rounded-lg bg-rose-950 border border-rose-500 text-rose-200";
+        box.innerHTML = `<strong>⛔ ${data.detail}</strong>`;
+      }
+    };
+  </script>
+</body>
+</html>
