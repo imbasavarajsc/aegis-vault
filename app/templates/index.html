@@ -7,7 +7,7 @@
     <style>
         :root {
             --bg-void: #030712;
-            --bg-panel: rgba(15, 23, 42, 0.78);
+            --bg-panel: rgba(15, 23, 42, 0.8);
             --bg-input: #070d19;
             --border-glass: rgba(148, 163, 184, 0.16);
             --cyan: #38bdf8;
@@ -116,8 +116,9 @@
             max-width: 1220px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 1.08fr 0.92fr;
+            grid-template-columns: 1.05fr 0.95fr;
             gap: 24px;
+            align-items: stretch;
         }
 
         @media (max-width: 920px) {
@@ -133,6 +134,7 @@
             box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
         }
 
         .card-top {
@@ -173,11 +175,10 @@
             .two-col { grid-template-columns: 1fr; }
         }
 
-        .field-group { margin-bottom: 14px; }
+        .field-group { margin-bottom: 15px; }
 
         label {
-            display: flex;
-            justify-content: space-between;
+            display: block;
             font-size: 12px;
             font-weight: 600;
             color: var(--text-dim);
@@ -189,7 +190,7 @@
             background: var(--bg-input);
             border: 1px solid var(--border-glass);
             border-radius: 10px;
-            padding: 11px 14px;
+            padding: 12px 14px;
             color: var(--text-main);
             font-size: 13.5px;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -200,29 +201,6 @@
             border-color: var(--cyan);
             box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
         }
-
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-wrapper input { padding-right: 72px; }
-
-        .toggle-btn {
-            position: absolute;
-            right: 8px;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid var(--border-glass);
-            color: var(--text-dim);
-            font-size: 11.5px;
-            font-weight: 600;
-            padding: 5px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .toggle-btn:hover { color: #fff; border-color: var(--cyan); }
 
         /* Collapsible Stealth Duress Config */
         details.stealth-config {
@@ -283,6 +261,7 @@
             background: linear-gradient(135deg, #e11d48, #9f1239);
             color: #fff;
             box-shadow: 0 10px 24px rgba(225, 29, 72, 0.35);
+            margin-top: 4px;
         }
 
         /* Share B Handover Card */
@@ -421,17 +400,47 @@
             background: rgba(56, 189, 248, 0.06);
             border: 1px solid rgba(56, 189, 248, 0.2);
             border-radius: 12px;
-            padding: 13px 15px;
+            padding: 14px 16px;
             font-size: 12.5px;
             color: var(--text-dim);
             margin-bottom: 18px;
             line-height: 1.55;
         }
 
+        .gate-checklist {
+            margin-top: 18px;
+            padding: 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+        }
+
+        .gate-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .gate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            font-size: 12.5px;
+            margin-bottom: 8px;
+        }
+
+        .gate-item:last-child { margin-bottom: 0; }
+
         .unlock-output {
             display: none;
-            margin-top: 18px;
-            padding: 18px;
+            margin-top: 16px;
+            padding: 16px;
             border-radius: 14px;
             font-size: 13.5px;
         }
@@ -554,68 +563,67 @@
 
         <!-- LEFT: VAULT OWNER -->
         <section class="vault-card">
-            <div class="card-top">
-                <h2>👤 Vault Owner</h2>
-                <span class="badge-role">Encrypt & Heartbeat</span>
-            </div>
-
-            <div class="two-col">
-                <div class="field-group">
-                    <label>Vault Identifier</label>
-                    <input type="text" id="ownerVaultId" value="family-vault-01" placeholder="e.g., family-vault-01">
+            <div>
+                <div class="card-top">
+                    <h2>👤 Vault Owner</h2>
+                    <span class="badge-role">Encrypt & Heartbeat</span>
                 </div>
-                <div class="field-group">
-                    <label>Dead-Man's Switch (Seconds)</label>
-                    <input type="number" id="timeoutSeconds" value="30" min="5" max="86400">
-                </div>
-            </div>
 
-            <div class="two-col">
-                <div class="field-group">
-                    <label>Owner Email</label>
-                    <input type="email" id="ownerEmail" value="owner@example.com" placeholder="owner@email.com">
-                </div>
-                <div class="field-group">
-                    <label>Beneficiary Alert Email</label>
-                    <input type="email" id="beneficiaryEmail" value="family@example.com" placeholder="family@email.com">
-                </div>
-            </div>
-
-            <div class="field-group">
-                <label>
-                    <span>Real Confidential Payload (Encrypted via AES-128)</span>
-                    <span style="color: var(--cyan); cursor: pointer;" onclick="toggleSecretMask()">👁️ Mask / Unmask</span>
-                </label>
-                <textarea id="secretPayload" rows="2" placeholder="Enter sensitive credentials...">SBI Bank PIN: 4829 | Zerodha Password: Aarav@2026</textarea>
-            </div>
-
-            <!-- STEALTH DURESS CONFIGURATION (HIDDEN FROM BENEFICIARY PANEL) -->
-            <details class="stealth-config">
-                <summary>⚙️ Optional: Configure Stealth Duress Decoy (Anti-Coercion)</summary>
-                <div class="two-col" style="margin-top: 10px;">
-                    <div>
-                        <label>Secret Duress Key (Case-Insensitive)</label>
-                        <input type="text" id="customDuressKey" value="DURESS-911" placeholder="e.g., DURESS-911">
+                <div class="two-col">
+                    <div class="field-group">
+                        <label>Vault Identifier</label>
+                        <input type="text" id="ownerVaultId" value="family-vault-01" oninput="syncVaultId(this.value)" placeholder="e.g., family-vault-01">
                     </div>
-                    <div>
-                        <label>Decoy Text Shown Under Threat</label>
-                        <input type="text" id="customDecoyPayload" value="SBI Bank PIN: 1940 | Zerodha Password: Guest@2024">
+                    <div class="field-group">
+                        <label>Dead-Man's Switch (Seconds)</label>
+                        <input type="number" id="timeoutSeconds" value="30" min="5" max="86400">
                     </div>
                 </div>
-            </details>
 
-            <button class="btn-action btn-seal" onclick="createVault()">🔒 Encrypt & Seal Vault</button>
-
-            <!-- SHARE B WITH 30s AUTO-WIPING COPY -->
-            <div id="shareBContainer" class="share-box">
-                <div class="share-header">
-                    <span class="share-label">🔑 OFFLINE KEY SHARE B (NEVER SAVED ON SERVER)</span>
-                    <button type="button" class="btn-copy" id="copyShareBtn" onclick="copyShareB()">📋 Copy Key</button>
+                <div class="two-col">
+                    <div class="field-group">
+                        <label>Owner Email</label>
+                        <input type="email" id="ownerEmail" value="owner@example.com" placeholder="owner@email.com">
+                    </div>
+                    <div class="field-group">
+                        <label>Beneficiary Alert Email</label>
+                        <input type="email" id="beneficiaryEmail" value="family@example.com" placeholder="family@email.com">
+                    </div>
                 </div>
-                <div class="share-code" id="shareBValue"></div>
-                <div class="share-meta">
-                    <span>Hand over offline/physically to Beneficiary.</span>
-                    <span id="clipboardStatus" style="color: var(--amber); font-weight: 600;"></span>
+
+                <div class="field-group">
+                    <label>Confidential Payload (Encrypted via AES-128)</label>
+                    <textarea id="secretPayload" rows="2" placeholder="Enter sensitive credentials to encrypt...">SBI Bank PIN: 4829 | Zerodha Password: Aarav@2026</textarea>
+                </div>
+
+                <!-- STEALTH DURESS CONFIGURATION (HIDDEN FROM BENEFICIARY PANEL) -->
+                <details class="stealth-config">
+                    <summary>⚙️ Optional: Configure Stealth Duress Decoy (Anti-Coercion)</summary>
+                    <div class="two-col" style="margin-top: 10px;">
+                        <div>
+                            <label>Secret Duress Key (Case-Insensitive)</label>
+                            <input type="text" id="customDuressKey" value="DURESS-911" placeholder="e.g., DURESS-911">
+                        </div>
+                        <div>
+                            <label>Decoy Text Shown Under Threat</label>
+                            <input type="text" id="customDecoyPayload" value="SBI Bank PIN: 1940 | Zerodha Password: Guest@2024">
+                        </div>
+                    </div>
+                </details>
+
+                <button class="btn-action btn-seal" onclick="createVault()">🔒 Encrypt & Seal Vault</button>
+
+                <!-- SHARE B WITH 30s AUTO-WIPING COPY -->
+                <div id="shareBContainer" class="share-box">
+                    <div class="share-header">
+                        <span class="share-label">🔑 OFFLINE KEY SHARE B (NEVER SAVED ON SERVER)</span>
+                        <button type="button" class="btn-copy" id="copyShareBtn" onclick="copyShareB()">📋 Copy Key</button>
+                    </div>
+                    <div class="share-code" id="shareBValue"></div>
+                    <div class="share-meta">
+                        <span>Hand over offline/physically to Beneficiary.</span>
+                        <span id="clipboardStatus" style="color: var(--amber); font-weight: 600;"></span>
+                    </div>
                 </div>
             </div>
 
@@ -638,31 +646,43 @@
 
         <!-- RIGHT: FAMILY BENEFICIARY -->
         <section class="vault-card">
-            <div class="card-top">
-                <h2>👪 Family Beneficiary</h2>
-                <span class="badge-role">Emergency Recovery</span>
+            <div>
+                <div class="card-top">
+                    <h2>👪 Family Beneficiary</h2>
+                    <span class="badge-role">Emergency Recovery</span>
+                </div>
+
+                <div class="zk-banner">
+                    <strong>Zero-Knowledge Enforcement:</strong> Decryption mathematically requires <strong>both</strong> Server Share A (released only after switch expiry) and your offline <strong>Key Share B</strong>.
+                </div>
+
+                <div class="field-group">
+                    <label>Target Vault Identifier</label>
+                    <input type="text" id="unlockVaultId" value="family-vault-01" placeholder="Enter Vault ID">
+                </div>
+
+                <div class="field-group">
+                    <label>Beneficiary Key Share B</label>
+                    <input type="text" id="unlockShareB" oninput="updateKeyGateBadge(this.value)" placeholder="Paste your offline Key Share B">
+                </div>
+
+                <button class="btn-action btn-recover" onclick="attemptUnlock()">🔓 Reconstruct Key & Unlock Vault</button>
+
+                <div id="unlockResultBox" class="unlock-output"></div>
             </div>
 
-            <div class="zk-banner">
-                <strong>Zero-Knowledge Enforcement:</strong> Decryption requires <strong>both</strong> Server Share A (released only after switch expiry) and your offline <strong>Key Share B</strong>.
-            </div>
-
-            <div class="field-group">
-                <label>Target Vault Identifier</label>
-                <input type="text" id="unlockVaultId" value="family-vault-01" placeholder="Enter Vault ID">
-            </div>
-
-            <div class="field-group">
-                <label>Beneficiary Key Share B</label>
-                <div class="input-wrapper">
-                    <input type="password" id="unlockShareB" placeholder="Paste your offline Key Share B">
-                    <button type="button" class="toggle-btn" onclick="toggleUnlockKeyMask()">Show</button>
+            <!-- DUAL-CONDITION RECOVERY GATE STATUS (BALANCES CARD HEIGHT) -->
+            <div class="gate-checklist">
+                <div class="gate-title">🔐 Dual-Condition Cryptographic Gate</div>
+                <div class="gate-item">
+                    <span>1. Server Share A (Dead-Man's Switch)</span>
+                    <span id="gateTimerStatus" style="color: var(--text-dim); font-weight: 700;">⏳ Waiting</span>
+                </div>
+                <div class="gate-item">
+                    <span>2. Physical Offline Key Share B</span>
+                    <span id="gateKeyStatus" style="color: var(--text-dim); font-weight: 700;">⚪ Not Entered</span>
                 </div>
             </div>
-
-            <button class="btn-action btn-recover" onclick="attemptUnlock()">🔓 Reconstruct Key & Unlock Vault</button>
-
-            <div id="unlockResultBox" class="unlock-output"></div>
         </section>
 
     </main>
@@ -683,7 +703,6 @@
         let wipeTimer = null;
         let clipboardTimer = null;
         let maxTimeout = 30;
-        let isMasked = false;
 
         function logEvent(msg) {
             const feed = document.getElementById('cryptoTraceLog');
@@ -691,21 +710,18 @@
             feed.innerHTML = `[${time}] ${msg}<br>` + feed.innerHTML;
         }
 
-        function toggleSecretMask() {
-            const box = document.getElementById('secretPayload');
-            isMasked = !isMasked;
-            box.style.webkitTextSecurity = isMasked ? 'disc' : 'none';
+        function syncVaultId(val) {
+            document.getElementById('unlockVaultId').value = val;
         }
 
-        function toggleUnlockKeyMask() {
-            const inp = document.getElementById('unlockShareB');
-            const btn = inp.nextElementSibling;
-            if (inp.type === 'password') {
-                inp.type = 'text';
-                btn.innerText = 'Hide';
+        function updateKeyGateBadge(val) {
+            const badge = document.getElementById('gateKeyStatus');
+            if (val.trim().length > 0) {
+                badge.style.color = '#10b981';
+                badge.innerText = '✅ Key Provided';
             } else {
-                inp.type = 'password';
-                btn.innerText = 'Show';
+                badge.style.color = '#94a3b8';
+                badge.innerText = '⚪ Not Entered';
             }
         }
 
@@ -746,7 +762,8 @@
             const vaultId = document.getElementById('ownerVaultId').value.trim();
             const ownerEmail = document.getElementById('ownerEmail').value.trim();
             const beneficiaryEmail = document.getElementById('beneficiaryEmail').value.trim();
-            const secret = document.getElementById('secretPayload').value;
+            const secretBox = document.getElementById('secretPayload');
+            const secret = secretBox.value;
             const timeout = parseInt(document.getElementById('timeoutSeconds').value);
 
             if (!vaultId || !ownerEmail || !beneficiaryEmail || !secret) {
@@ -767,6 +784,10 @@
             const data = await res.json();
 
             if (res.ok) {
+                // Scrub plaintext from Owner screen RAM right after sealing
+                secretBox.value = '';
+                secretBox.placeholder = '🔒 Encrypted & cleared from screen RAM. Enter new secret to overwrite...';
+
                 document.getElementById('shareBContainer').style.display = 'block';
                 document.getElementById('shareBValue').innerText = data.beneficiary_key_share_B;
                 document.getElementById('unlockVaultId').value = vaultId;
@@ -775,7 +796,7 @@
                 document.getElementById('clipboardStatus').innerText = '';
                 document.getElementById('bridgeSymbol').innerHTML = '⊕ <span style="color:#f43f5e;">SEALED</span> ⊕';
 
-                logEvent("🔐 [AES-128-CBC] Secret payload encrypted into ciphertext.");
+                logEvent("🔐 [AES-128-CBC] Secret payload encrypted into ciphertext; plaintext cleared from screen.");
                 logEvent("🔀 [XOR SPLIT] MasterKey ^ ShareB = ShareA -> ShareA stored in Redis; ShareB air-gapped.");
 
                 startPolling(vaultId);
@@ -798,6 +819,7 @@
             const rem = data.seconds_remaining;
             const badge = document.getElementById('vaultStatusBadge');
             const ring = document.getElementById('progressRing');
+            const gateTimer = document.getElementById('gateTimerStatus');
             document.getElementById('timeRemaining').innerText = rem;
 
             const circumference = 201; // 2 * PI * 32
@@ -809,12 +831,16 @@
                 badge.innerText = '🟢 ACTIVE (LOCKED)';
                 ring.style.stroke = rem <= 5 ? '#f59e0b' : '#10b981';
                 document.getElementById('bridgeSymbol').innerHTML = '⊕ <span style="color:#f43f5e;">SEALED</span> ⊕';
+                gateTimer.style.color = '#f43f5e';
+                gateTimer.innerText = `🔒 Locked (${rem}s left)`;
             } else {
                 badge.className = 'status-tag expired';
                 badge.innerText = '🔴 EXPIRED (READY)';
                 ring.style.stroke = '#f43f5e';
                 ring.style.strokeDashoffset = circumference;
                 document.getElementById('bridgeSymbol').innerHTML = '⊕ <span style="color:#10b981;">UNLOCKABLE</span> ⊕';
+                gateTimer.style.color = '#10b981';
+                gateTimer.innerText = '✅ Released';
             }
         }
 
