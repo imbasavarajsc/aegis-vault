@@ -202,6 +202,41 @@
             box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
         }
 
+        /* Inline Hide/Show Wrapper for Both Owner & Beneficiary */
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper textarea {
+            padding-right: 72px;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--border-glass);
+            color: var(--text-dim);
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .toggle-btn.textarea-toggle {
+            top: 10px;
+            transform: none;
+        }
+
+        .toggle-btn:hover { color: #fff; border-color: var(--cyan); }
+
         /* Collapsible Stealth Duress Config */
         details.stealth-config {
             margin-bottom: 16px;
@@ -593,7 +628,10 @@
 
                 <div class="field-group">
                     <label>Confidential Payload (Encrypted via AES-128)</label>
-                    <textarea id="secretPayload" rows="2" placeholder="Enter sensitive credentials to encrypt...">SBI Bank PIN: 4829 | Zerodha Password: Aarav@2026</textarea>
+                    <div class="input-wrapper">
+                        <textarea id="secretPayload" rows="2" placeholder="Enter sensitive credentials to encrypt...">SBI Bank PIN: 4829 | Zerodha Password: Aarav@2026</textarea>
+                        <button type="button" class="toggle-btn textarea-toggle" onclick="toggleOwnerSecretVisibility(this)">Hide</button>
+                    </div>
                 </div>
 
                 <!-- STEALTH DURESS CONFIGURATION (HIDDEN FROM BENEFICIARY PANEL) -->
@@ -663,7 +701,10 @@
 
                 <div class="field-group">
                     <label>Beneficiary Key Share B</label>
-                    <input type="text" id="unlockShareB" oninput="updateKeyGateBadge(this.value)" placeholder="Paste your offline Key Share B">
+                    <div class="input-wrapper">
+                        <input type="text" id="unlockShareB" oninput="updateKeyGateBadge(this.value)" placeholder="Paste your offline Key Share B">
+                        <button type="button" class="toggle-btn" onclick="toggleBeneficiaryKeyVisibility(this)">Hide</button>
+                    </div>
                 </div>
 
                 <button class="btn-action btn-recover" onclick="attemptUnlock()">🔓 Reconstruct Key & Unlock Vault</button>
@@ -703,6 +744,7 @@
         let wipeTimer = null;
         let clipboardTimer = null;
         let maxTimeout = 30;
+        let isOwnerSecretHidden = false;
 
         function logEvent(msg) {
             const feed = document.getElementById('cryptoTraceLog');
@@ -712,6 +754,24 @@
 
         function syncVaultId(val) {
             document.getElementById('unlockVaultId').value = val;
+        }
+
+        function toggleOwnerSecretVisibility(btn) {
+            const area = document.getElementById('secretPayload');
+            isOwnerSecretHidden = !isOwnerSecretHidden;
+            area.style.webkitTextSecurity = isOwnerSecretHidden ? 'disc' : 'none';
+            btn.innerText = isOwnerSecretHidden ? 'Show' : 'Hide';
+        }
+
+        function toggleBeneficiaryKeyVisibility(btn) {
+            const inp = document.getElementById('unlockShareB');
+            if (inp.type === 'text') {
+                inp.type = 'password';
+                btn.innerText = 'Show';
+            } else {
+                inp.type = 'text';
+                btn.innerText = 'Hide';
+            }
         }
 
         function updateKeyGateBadge(val) {
@@ -784,7 +844,6 @@
             const data = await res.json();
 
             if (res.ok) {
-                // Scrub plaintext from Owner screen RAM right after sealing
                 secretBox.value = '';
                 secretBox.placeholder = '🔒 Encrypted & cleared from screen RAM. Enter new secret to overwrite...';
 
