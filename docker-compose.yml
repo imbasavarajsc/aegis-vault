@@ -1,0 +1,25 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: aegis_redis
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    container_name: aegis_web_api
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+
+  worker:
+    build: .
+    container_name: aegis_watchdog_worker
+    command: python -u app/worker.py
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
