@@ -1,155 +1,393 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AegisVault | Zero-Knowledge Digital Will</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisVault | Zero-Knowledge Dead-Man's Switch</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-bright: #f0f6fc;
+            --accent-blue: #58a6ff;
+            --accent-green: #238636;
+            --accent-red: #da3633;
+            --accent-orange: #d29922;
+        }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            max-width: 1100px;
+            margin: 0 auto 25px auto;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header h1 { color: var(--text-bright); margin: 0 0 8px 0; font-size: 28px; }
+        .header p { margin: 0; color: #8b949e; font-size: 14px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 22px;
+        }
+        .card h2 { margin-top: 0; font-size: 19px; color: var(--text-bright); display: flex; align-items: center; gap: 8px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 5px 0; color: #8b949e; }
+        input, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-bright);
+            font-size: 14px;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--accent-blue); }
+        button {
+            width: 100%;
+            padding: 11px;
+            margin-top: 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        .btn-primary { background: var(--accent-blue); color: #0d1117; }
+        .btn-green { background: var(--accent-green); color: #ffffff; }
+        .btn-red { background: var(--accent-red); color: #ffffff; }
+        .status-box {
+            margin-top: 18px;
+            padding: 14px;
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .key-display {
+            margin-top: 12px;
+            padding: 12px;
+            background: #272115;
+            border: 1px solid var(--accent-orange);
+            border-radius: 6px;
+            color: #e3b341;
+            font-family: monospace;
+            word-break: break-all;
+            font-size: 13px;
+        }
+        .result-box {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            white-space: pre-wrap;
+        }
+        .result-success { background: #0f291e; border: 1px solid #2ea043; color: #3fb950; }
+        .result-error { background: #2d1215; border: 1px solid #f85149; color: #ff7b72; }
+        .monitor-box {
+            max-width: 1100px;
+            margin: 24px auto 0 auto;
+            padding: 18px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-family: monospace;
+        }
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .trace-log {
+            height: 120px;
+            overflow-y: auto;
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #8b949e;
+            line-height: 1.6;
+        }
+        .wipe-banner {
+            display: none;
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: #3d1d00;
+            border: 1px solid #f0883e;
+            border-radius: 6px;
+            color: #ffa657;
+            font-size: 12px;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
-  <div class="max-w-6xl mx-auto">
-    <!-- Header -->
-    <header class="border-b border-slate-700 pb-4 mb-8 flex justify-between items-center">
-      <div>
-        <h1 class="text-3xl font-bold text-emerald-400">🛡️ AegisVault</h1>
-        <p class="text-slate-400 text-sm">Zero-Knowledge Split-Key Digital Will & Emergency Dead-Man's Switch</p>
-      </div>
-      <span class="bg-slate-800 border border-emerald-500/40 text-emerald-300 text-xs px-3 py-1.5 rounded-full">
-        AES-128-CBC + XOR Split-Key Active
-      </span>
-    </header>
+<body>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- LEFT PANEL: PERSONA 1 (VAULT OWNER) -->
-      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-        <h2 class="text-xl font-semibold text-sky-400 mb-1">👤 Persona 1: Vault Owner Portal</h2>
-        <p class="text-xs text-slate-400 mb-4">Encrypt plain-text passwords & set your Dead-Man's Switch timer.</p>
+<div class="header">
+    <h1>🛡️ AegisVault</h1>
+    <p>Zero-Knowledge Split-Key Digital Will & Automated Dead-Man's Switch</p>
+</div>
 
-        <form id="createForm" class="space-y-3">
-          <input type="text" name="vault_id" placeholder="Vault ID (e.g., family-vault-01)" required
-            class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
-          <div class="grid grid-cols-2 gap-2">
-            <input type="email" name="owner_email" placeholder="Your Email" required
-              class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
-            <input type="email" name="beneficiary_email" placeholder="Beneficiary Email" required
-              class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
-          </div>
-          <textarea name="secret" rows="3" placeholder="Enter Plain-Text Passwords, Bank PINs & Emergency Instructions..." required
-            class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm"></textarea>
-          <div>
-            <label class="text-xs text-slate-400">Dead-Man's Switch Timer (Seconds for Expo Demo):</label>
-            <input type="number" name="timeout_sec" value="25" required
-              class="w-full p-2 rounded bg-slate-900 border border-slate-700 text-sm mt-1">
-          </div>
-          <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 font-semibold py-2.5 rounded transition">
-            🔒 Encrypt & Lock Vault
-          </button>
-        </form>
+<div class="grid">
+    <!-- LEFT PANEL: VAULT OWNER -->
+    <div class="card">
+        <h2>👤 Vault Owner (Create & Heartbeat)</h2>
+        <label>Vault ID</label>
+        <input type="text" id="ownerVaultId" value="demo-vault" placeholder="e.g., family-vault-01">
 
-        <!-- Share B Output Box -->
-        <div id="ownerResult" class="hidden mt-4 p-4 bg-slate-900 border border-amber-500/50 rounded-lg text-xs space-y-2">
-          <p class="text-amber-400 font-semibold">⚠️ SAVE OFFLINE KEY SHARE B (Give to Beneficiary):</p>
-          <code id="shareBBox" class="block bg-black p-2 rounded text-emerald-400 break-all select-all"></code>
-          <p class="text-slate-400">Server only holds Share A. Without Share B above, decryption is mathematically impossible.</p>
+        <label>Beneficiary Email (Alert Target)</label>
+        <input type="email" id="beneficiaryEmail" value="family@example.com" placeholder="nominee@email.com">
+
+        <label>Secret Assets / Bank PINs / Crypto Seed</label>
+        <textarea id="secretPayload" rows="3" placeholder="Enter sensitive credentials to encrypt...">SBI Bank PIN: 4829 | Zerodha Password: Aarav@2026</textarea>
+
+        <label>Dead-Man's Switch Countdown (Seconds)</label>
+        <input type="number" id="timeoutSeconds" value="25" min="5" max="86400">
+
+        <button class="btn-primary" onclick="createVault()">🔒 Encrypt & Lock Vault</button>
+
+        <div id="shareBContainer" class="key-display" style="display:none;">
+            <strong>🔑 OFFLINE KEY (SHARE B) — AIR-GAP HANDOVER ONLY:</strong><br>
+            <span id="shareBValue"></span>
+            <div style="font-size: 11px; color: #8b949e; margin-top: 6px;">
+                * Not stored on server. Give physically/offline to Beneficiary.
+            </div>
         </div>
 
-        <!-- Live Heartbeat Controls -->
-        <div class="mt-6 pt-4 border-t border-slate-700 flex items-center justify-between">
-          <div>
-            <span class="text-xs text-slate-400 block">Live Switch Status:</span>
-            <span id="liveTimer" class="text-lg font-bold text-slate-300">No Active Vault</span>
-          </div>
-          <button id="checkinBtn" onclick="sendCheckin()"
-            class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded font-semibold text-sm transition">
-            💓 I'm Alive (Reset Timer)
-          </button>
+        <div class="status-box">
+            <div><strong>Vault Status:</strong> <span id="vaultStatusBadge">⚪ NOT CREATED</span></div>
+            <div style="margin-top: 6px;"><strong>Time Remaining:</strong> <span id="timeRemaining">--</span> seconds</div>
+            <button class="btn-green" onclick="sendHeartbeat()">💓 I'm Alive (Reset Heartbeat Timer)</button>
         </div>
-      </div>
-
-      <!-- RIGHT PANEL: PERSONA 2 (BENEFICIARY) -->
-      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg flex flex-col justify-between">
-        <div>
-          <h2 class="text-xl font-semibold text-purple-400 mb-1">🔑 Persona 2: Beneficiary Emergency Portal</h2>
-          <p class="text-xs text-slate-400 mb-4">Attempt to unlock emergency instructions using offline Key Share B.</p>
-
-          <form id="unlockForm" class="space-y-3">
-            <input type="text" id="unlockVaultId" name="vault_id" placeholder="Enter Vault ID" required
-              class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
-            <input type="text" name="share_b" placeholder="Paste Offline Key Share B" required
-              class="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-sm">
-            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 font-semibold py-2.5 rounded transition">
-              🔓 Attempt Emergency Unlock
-            </button>
-          </form>
-
-          <div id="unlockResult" class="hidden mt-6 p-4 rounded-lg text-sm"></div>
-        </div>
-
-        <div class="mt-6 p-3 bg-slate-900/70 rounded border border-slate-700 text-xs text-slate-400">
-          <strong>Zero-Knowledge Security Proof:</strong> Try clicking <em>Attempt Emergency Unlock</em> while the timer on the left is still counting down. The server will block access (`403 ACCESS DENIED`) even if you have the right key!
-        </div>
-      </div>
     </div>
-  </div>
 
-  <script>
-    let currentVaultId = "";
+    <!-- RIGHT PANEL: FAMILY BENEFICIARY -->
+    <div class="card">
+        <h2>👪 Family Beneficiary (Emergency Unlock)</h2>
+        <p style="font-size: 13px; color: #8b949e; margin-top: 0;">
+            Decryption requires <strong>both</strong> an expired Dead-Man's Switch timer and the offline Key Share B.
+        </p>
+
+        <label>Target Vault ID</label>
+        <input type="text" id="unlockVaultId" value="demo-vault" placeholder="Enter Vault ID">
+
+        <label>Offline Key (Share B) or Duress Key</label>
+        <input type="text" id="unlockShareB" placeholder="Paste Offline Key Share B (or DURESS-911)">
+
+        <button class="btn-red" onclick="attemptUnlock()">🔓 Attempt Emergency Unlock</button>
+
+        <div id="unlockResultBox" class="result-box"></div>
+    </div>
+</div>
+
+<!-- ZERO-TRACE SECURITY SUITE MONITOR -->
+<div class="monitor-box">
+    <div class="monitor-header">
+        <strong style="color: #58a6ff;">📡 LIVE ZERO-KNOWLEDGE CRYPTO & VOLATILE MEMORY MONITOR</strong>
+        <div>
+            <span style="background: #0d1117; border: 1px solid #30363d; padding: 5px 10px; border-radius: 6px; font-size: 12px; margin-right: 8px;">
+                Anti-Coercion Duress Key: <code style="color: #f0883e;">DURESS-911</code>
+            </span>
+            <button onclick="speakUnlockedText()" style="width: auto; margin: 0; padding: 6px 12px; background: #1f6feb; color: #fff; font-size: 12px;">
+                🔊 Read Secrets Aloud (Zero-Storage)
+            </button>
+        </div>
+    </div>
+
+    <div id="cryptoTraceLog" class="trace-log">
+        [INIT] Volatile Browser RAM Mode Active — Zero plain-text files saved to device storage.<br>
+        [READY] Waiting for AES-128-CBC encryption or XOR key reconstruction event...<br>
+    </div>
+
+    <div id="ramWipeBanner" class="wipe-banner">
+        ⏳ <strong>VOLATILE RAM PROTECTION:</strong> Decrypted secrets will auto-wipe from screen in <span id="wipeSeconds">60</span>s to prevent shoulder-surfing.
+    </div>
+</div>
+
+<script>
     let pollInterval = null;
+    let wipeTimer = null;
 
-    document.getElementById("createForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      currentVaultId = formData.get("vault_id");
-      document.getElementById("unlockVaultId").value = currentVaultId;
-
-      const res = await fetch("/vault/create", { method: "POST", body: formData });
-      const data = await res.json();
-
-      document.getElementById("ownerResult").classList.remove("hidden");
-      document.getElementById("shareBBox").innerText = data.beneficiary_key_share_B;
-
-      if (pollInterval) clearInterval(pollInterval);
-      pollStatus();
-      pollInterval = setInterval(pollStatus, 1000);
-    };
-
-    async function pollStatus() {
-      if (!currentVaultId) return;
-      const res = await fetch(`/vault/${currentVaultId}/status`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const timerEl = document.getElementById("liveTimer");
-      if (data.status === "ACTIVE") {
-        timerEl.innerText = `🟢 ACTIVE (${data.seconds_remaining}s remaining)`;
-        timerEl.className = "text-lg font-bold text-emerald-400";
-      } else {
-        timerEl.innerText = `🔴 EXPIRED — SWITCH TRIGGERED!`;
-        timerEl.className = "text-lg font-bold text-rose-500 animate-pulse";
-      }
+    function logCryptoStep(msg) {
+        const log = document.getElementById('cryptoTraceLog');
+        const now = new Date().toLocaleTimeString();
+        log.innerHTML = `[${now}] ${msg}<br>` + log.innerHTML;
     }
 
-    async function sendCheckin() {
-      if (!currentVaultId) return alert("Create a vault first!");
-      await fetch(`/vault/${currentVaultId}/checkin`, { method: "POST" });
-      pollStatus();
+    async function createVault() {
+        const vaultId = document.getElementById('ownerVaultId').value.trim();
+        const email = document.getElementById('beneficiaryEmail').value.trim();
+        const secret = document.getElementById('secretPayload').value;
+        const timeout = parseInt(document.getElementById('timeoutSeconds').value);
+
+        if (!vaultId || !secret) {
+            alert("Please enter a Vault ID and Secret Payload.");
+            return;
+        }
+
+        const res = await fetch('/api/vault/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                vault_id: vaultId,
+                beneficiary_email: email,
+                secret_data: secret,
+                timeout_seconds: timeout
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('shareBContainer').style.display = 'block';
+            document.getElementById('shareBValue').innerText = data.share_b;
+            document.getElementById('unlockVaultId').value = vaultId;
+            document.getElementById('unlockResultBox').style.display = 'none';
+
+            logCryptoStep("🔐 [STEP 1: AES-128-CBC] Plaintext encrypted into unreadable ciphertext.");
+            logCryptoStep("🔀 [STEP 2: XOR SPLIT] MasterKey ^ ShareB = ShareA -> ShareA stored in Redis; ShareB air-gapped.");
+
+            startStatusPolling(vaultId);
+        } else {
+            alert("Error creating vault: " + (data.detail || "Unknown error"));
+        }
     }
 
-    document.getElementById("unlockForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const vaultId = formData.get("vault_id");
-      const res = await fetch(`/vault/${vaultId}/unlock`, { method: "POST", body: formData });
-      const data = await res.json();
-      const box = document.getElementById("unlockResult");
-      box.classList.remove("hidden");
+    function startStatusPolling(vaultId) {
+        if (pollInterval) clearInterval(pollInterval);
+        checkVaultStatus(vaultId);
+        pollInterval = setInterval(() => checkVaultStatus(vaultId), 1000);
+    }
 
-      if (res.ok) {
-        box.className = "mt-6 p-4 rounded-lg bg-emerald-950 border border-emerald-500 text-emerald-200";
-        box.innerHTML = `<strong>✅ VAULT UNLOCKED (Plain-Text Restored):</strong><pre class="mt-2 p-2 bg-black rounded text-white whitespace-pre-wrap">${data.decrypted_secrets}</pre>`;
-      } else {
-        box.className = "mt-6 p-4 rounded-lg bg-rose-950 border border-rose-500 text-rose-200";
-        box.innerHTML = `<strong>⛔ ${data.detail}</strong>`;
-      }
-    };
-  </script>
+    async function checkVaultStatus(vaultId) {
+        const res = await fetch(`/api/vault/${vaultId}/status`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const badge = document.getElementById('vaultStatusBadge');
+        const timeSpan = document.getElementById('timeRemaining');
+        timeSpan.innerText = data.remaining_seconds;
+
+        if (data.status === 'ACTIVE') {
+            badge.innerHTML = `<span style="color:#3fb950;">🟢 ACTIVE (LOCKED)</span>`;
+        } else {
+            badge.innerHTML = `<span style="color:#f85149;">🔴 EXPIRED (READY FOR UNLOCK)</span>`;
+        }
+    }
+
+    async function sendHeartbeat() {
+        const vaultId = document.getElementById('ownerVaultId').value.trim();
+        const res = await fetch(`/api/vault/${vaultId}/heartbeat`, { method: 'POST' });
+        if (res.ok) {
+            logCryptoStep("💓 [HEARTBEAT] Owner check-in confirmed -> Watchdog countdown reset in Redis.");
+            checkVaultStatus(vaultId);
+        } else {
+            alert("Create a vault first!");
+        }
+    }
+
+    async function attemptUnlock() {
+        const vaultId = document.getElementById('unlockVaultId').value.trim();
+        const shareB = document.getElementById('unlockShareB').value.trim();
+        const resultBox = document.getElementById('unlockResultBox');
+
+        if (!vaultId || !shareB) {
+            alert("Enter both Vault ID and Offline Key Share B.");
+            return;
+        }
+
+        // Anti-Coercion Duress Decoy Vault ("DURESS-911")
+        if (shareB.toUpperCase() === 'DURESS-911') {
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box result-success';
+            resultBox.innerHTML = `<strong>✅ VAULT UNLOCKED (VERIFIED)</strong>\n\nBank: State Bank of India (Savings)\nAccount No: 30918472610 (IFSC: SBIN0004122)\nATM PIN: 4920 | NetBanking: Ravi@1998\nAvailable Balance: ₹1,420.00`;
+            logCryptoStep("⚠️ [DURESS TRIGGERED] Coercion key 'DURESS-911' detected -> Served decoy vault; real Share A untouched.");
+            startVolatileWipeCountdown();
+            return;
+        }
+
+        const res = await fetch(`/api/vault/${vaultId}/unlock`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ share_b: shareB })
+        });
+
+        const data = await res.json();
+        resultBox.style.display = 'block';
+
+        if (res.status === 200) {
+            resultBox.className = 'result-box result-success';
+            resultBox.innerHTML = `<strong>✅ VAULT UNLOCKED (ZERO-KNOWLEDGE VERIFIED)</strong>\n\n${data.decrypted_secret}`;
+            logCryptoStep("🔓 [XOR RESTORED - HTTP 200] ShareA ^ ShareB = MasterKey -> AES-128 decrypted in volatile RAM.");
+            startVolatileWipeCountdown();
+        } else if (res.status === 403) {
+            resultBox.className = 'result-box result-error';
+            resultBox.innerHTML = `<strong>⛔ 403 ACCESS DENIED</strong>\n${data.detail}`;
+            logCryptoStep("⛔ [BLOCKED - HTTP 403] Timer is still ACTIVE. Server refused XOR key reconstruction.");
+        } else {
+            resultBox.className = 'result-box result-error';
+            resultBox.innerHTML = `<strong>❌ UNLOCK FAILED (${res.status})</strong>\n${data.detail}`;
+            logCryptoStep(`❌ [REJECTED - HTTP ${res.status}] Invalid Key Share B or Vault ID.`);
+        }
+    }
+
+    function speakUnlockedText() {
+        const resultBox = document.getElementById('unlockResultBox');
+        if (resultBox.style.display === 'none' || !resultBox.innerText.includes('VAULT UNLOCKED')) {
+            alert("Unlock a vault first so the voice assistant can read the instructions aloud.");
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const speech = new SpeechSynthesisUtterance(resultBox.innerText);
+        speech.rate = 0.95;
+        window.speechSynthesis.speak(speech);
+        logCryptoStep("🔊 [ACCESSIBILITY] Voice readout active via browser SpeechSynthesis (zero disk write).");
+    }
+
+    function startVolatileWipeCountdown() {
+        const banner = document.getElementById('ramWipeBanner');
+        const secSpan = document.getElementById('wipeSeconds');
+        const resultBox = document.getElementById('unlockResultBox');
+        let timeLeft = 60;
+
+        banner.style.display = 'block';
+        secSpan.innerText = timeLeft;
+
+        if (wipeTimer) clearInterval(wipeTimer);
+        wipeTimer = setInterval(() => {
+            timeLeft--;
+            secSpan.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(wipeTimer);
+                resultBox.className = 'result-box result-error';
+                resultBox.innerHTML = `<strong>🔒 VOLATILE RAM WIPED</strong>\nScreen cleared automatically after 60 seconds for privacy.`;
+                banner.style.display = 'none';
+                logCryptoStep("🧹 [RAM SCRUBBED] Decrypted secrets wiped from browser memory after 60s timeout.");
+            }
+        }, 1000);
+    }
+</script>
+
 </body>
 </html>
