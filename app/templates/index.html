@@ -3,398 +3,874 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AegisVault | Zero-Knowledge Dead-Man's Switch</title>
+    <title>AegisVault | Zero-Knowledge Split-Key Digital Will</title>
     <style>
         :root {
-            --bg-dark: #0d1117;
-            --card-bg: #161b22;
-            --border-color: #30363d;
-            --text-main: #c9d1d9;
-            --text-bright: #f0f6fc;
-            --accent-blue: #58a6ff;
-            --accent-green: #238636;
-            --accent-red: #da3633;
-            --accent-orange: #d29922;
+            --bg-base: #060913;
+            --bg-surface: #0f1626;
+            --bg-elevated: #162035;
+            --border-subtle: rgba(148, 163, 184, 0.14);
+            --border-glow: rgba(56, 189, 248, 0.4);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --cyan: #38bdf8;
+            --indigo: #6366f1;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
         }
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
-            line-height: 1.5;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        .header {
-            text-align: center;
-            max-width: 1100px;
-            margin: 0 auto 25px auto;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
+
+        body {
+            background: radial-gradient(circle at top center, #111c38 0%, var(--bg-base) 65%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 28px 20px 50px 20px;
         }
-        .header h1 { color: var(--text-bright); margin: 0 0 8px 0; font-size: 28px; }
-        .header p { margin: 0; color: #8b949e; font-size: 14px; }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 22px;
-        }
-        .card h2 { margin-top: 0; font-size: 19px; color: var(--text-bright); display: flex; align-items: center; gap: 8px; }
-        label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 5px 0; color: #8b949e; }
-        input, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            background: #0d1117;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-bright);
-            font-size: 14px;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent-blue); }
-        button {
-            width: 100%;
-            padding: 11px;
-            margin-top: 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.9; }
-        .btn-primary { background: var(--accent-blue); color: #0d1117; }
-        .btn-green { background: var(--accent-green); color: #ffffff; }
-        .btn-red { background: var(--accent-red); color: #ffffff; }
-        .status-box {
-            margin-top: 18px;
-            padding: 14px;
-            background: #0d1117;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 13px;
-        }
-        .key-display {
-            margin-top: 12px;
-            padding: 12px;
-            background: #272115;
-            border: 1px solid var(--accent-orange);
-            border-radius: 6px;
-            color: #e3b341;
-            font-family: monospace;
-            word-break: break-all;
-            font-size: 13px;
-        }
-        .result-box {
-            margin-top: 16px;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-            white-space: pre-wrap;
-        }
-        .result-success { background: #0f291e; border: 1px solid #2ea043; color: #3fb950; }
-        .result-error { background: #2d1215; border: 1px solid #f85149; color: #ff7b72; }
-        .monitor-box {
-            max-width: 1100px;
-            margin: 24px auto 0 auto;
-            padding: 18px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            font-family: monospace;
-        }
-        .monitor-header {
+
+        /* Top Navigation / Hero Bar */
+        .topbar {
+            max-width: 1180px;
+            margin: 0 auto 30px auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 16px;
+            padding: 18px 24px;
+            background: rgba(15, 22, 38, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
         }
-        .trace-log {
-            height: 120px;
-            overflow-y: auto;
-            background: #0d1117;
-            border: 1px solid var(--border-color);
-            padding: 10px;
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--cyan), var(--indigo));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+        }
+
+        .brand h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+        }
+
+        .brand p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .security-pills {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill.green {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.25);
+            color: var(--emerald);
+        }
+
+        /* Main Dual-Role Grid */
+        .workspace {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 880px) {
+            .workspace { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .role-tag {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media (max-width: 520px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        input, textarea {
+            width: 100%;
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group input {
+            padding-right: 75px;
+        }
+
+        .input-action {
+            position: absolute;
+            right: 8px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+        }
+
+        .input-action:hover {
+            color: var(--text-primary);
+            border-color: var(--cyan);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 13px 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s;
+        }
+
+        .btn:active { transform: scale(0.99); }
+
+        .btn-lock {
+            background: linear-gradient(135deg, var(--cyan), var(--indigo));
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-heartbeat {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: var(--emerald);
+            margin-top: 12px;
+        }
+
+        .btn-heartbeat:hover {
+            background: var(--emerald);
+            color: #ffffff;
+        }
+
+        .btn-unlock {
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3);
+        }
+
+        /* Offline Key Share B Card with Copy & Auto-Clear */
+        .key-card {
+            display: none;
+            margin-top: 18px;
+            padding: 16px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 12px;
+        }
+
+        .key-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .key-card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--amber);
+            letter-spacing: 0.4px;
+        }
+
+        .copy-btn {
+            background: var(--amber);
+            color: #060913;
+            border: none;
+            padding: 5px 12px;
             border-radius: 6px;
             font-size: 12px;
-            color: #8b949e;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover { opacity: 0.9; }
+
+        .key-value {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            color: #fde68a;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 10px 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .clipboard-notice {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Live Dead-Man Switch Telemetry Box */
+        .telemetry-card {
+            margin-top: 18px;
+            padding: 18px;
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+        }
+
+        .telemetry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .status-pill {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-secondary);
+        }
+
+        .status-pill.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-pill.expired {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--rose);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .timer-digits {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-elevated);
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 10px 0 4px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--emerald), var(--cyan));
+            transition: width 0.4s linear, background 0.3s;
+        }
+
+        /* Beneficiary Unlock Output */
+        .info-callout {
+            background: rgba(56, 189, 248, 0.06);
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .result-panel {
+            display: none;
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 14px;
             line-height: 1.6;
         }
-        .wipe-banner {
-            display: none;
+
+        .result-panel.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #a7f3d0;
+        }
+
+        .result-panel.error {
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.35);
+            color: #fecdd3;
+        }
+
+        .decrypted-content {
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13.5px;
+            color: #ffffff;
+            white-space: pre-wrap;
+        }
+
+        .result-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-top: 12px;
-            padding: 10px 12px;
-            background: #3d1d00;
-            border: 1px solid #f0883e;
-            border-radius: 6px;
-            color: #ffa657;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 12px;
+        }
+
+        .voice-btn {
+            background: rgba(56, 189, 248, 0.18);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: var(--cyan);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Live Cryptographic Audit Log */
+        .audit-section {
+            max-width: 1180px;
+            margin: 24px auto 0 auto;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px 24px;
+        }
+
+        .audit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .audit-title {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--emerald);
+        }
+
+        .audit-console {
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 12px 14px;
+            height: 125px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.65;
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>🛡️ AegisVault</h1>
-    <p>Zero-Knowledge Split-Key Digital Will & Automated Dead-Man's Switch</p>
-</div>
-
-<div class="grid">
-    <!-- LEFT PANEL: VAULT OWNER -->
-    <div class="card">
-        <h2>👤 Vault Owner (Create & Heartbeat)</h2>
-        <label>Vault ID</label>
-        <input type="text" id="ownerVaultId" value="demo-vault" placeholder="e.g., family-vault-01">
-
-        <label>Owner Email</label>
-        <input type="email" id="ownerEmail" value="owner@example.com" placeholder="owner@email.com">
-
-        <label>Beneficiary Email (Alert Target)</label>
-        <input type="email" id="beneficiaryEmail" value="family@example.com" placeholder="nominee@email.com">
-
-        <label>Secret Assets / Bank PINs / Crypto Seed</label>
-        <textarea id="secretPayload" rows="3" placeholder="Enter sensitive credentials to encrypt...">SBI Bank PIN: 4829 | Zerodha Password: Aarav@2026</textarea>
-
-        <label>Dead-Man's Switch Countdown (Seconds)</label>
-        <input type="number" id="timeoutSeconds" value="25" min="5" max="86400">
-
-        <button class="btn-primary" onclick="createVault()">🔒 Encrypt & Lock Vault</button>
-
-        <div id="shareBContainer" class="key-display" style="display:none;">
-            <strong>🔑 OFFLINE KEY (SHARE B) — AIR-GAP HANDOVER ONLY:</strong><br>
-            <span id="shareBValue"></span>
-            <div style="font-size: 11px; color: #8b949e; margin-top: 6px;">
-                * Not stored on server. Give physically/offline to Beneficiary.
+    <!-- TOP NAVIGATION BAR -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">🛡️</div>
+            <div>
+                <h1>AegisVault</h1>
+                <p>Zero-Knowledge Split-Key Digital Will & Dead-Man's Switch</p>
             </div>
         </div>
-
-        <div class="status-box">
-            <div><strong>Vault Status:</strong> <span id="vaultStatusBadge">⚪ NOT CREATED</span></div>
-            <div style="margin-top: 6px;"><strong>Time Remaining:</strong> <span id="timeRemaining">--</span> seconds</div>
-            <button class="btn-green" onclick="sendHeartbeat()">💓 I'm Alive (Reset Heartbeat Timer)</button>
+        <div class="security-pills">
+            <span class="pill">🔐 AES-128-CBC + XOR Split</span>
+            <span class="pill green">🧠 Zero-Storage Volatile RAM</span>
         </div>
-    </div>
+    </header>
 
-    <!-- RIGHT PANEL: FAMILY BENEFICIARY -->
-    <div class="card">
-        <h2>👪 Family Beneficiary (Emergency Unlock)</h2>
-        <p style="font-size: 13px; color: #8b949e; margin-top: 0;">
-            Decryption requires <strong>both</strong> an expired Dead-Man's Switch timer and the offline Key Share B.
-        </p>
+    <!-- DUAL WORKSPACE -->
+    <main class="workspace">
 
-        <label>Target Vault ID</label>
-        <input type="text" id="unlockVaultId" value="demo-vault" placeholder="Enter Vault ID">
+        <!-- LEFT: VAULT OWNER -->
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">👤 Vault Owner</div>
+                <span class="role-tag">Encrypt & Heartbeat</span>
+            </div>
 
-        <label>Offline Key (Share B) or Duress Key</label>
-        <input type="text" id="unlockShareB" placeholder="Paste Offline Key Share B (or DURESS-911)">
+            <div class="form-row">
+                <div class="field">
+                    <label>Vault Identifier</label>
+                    <input type="text" id="ownerVaultId" value="family-vault-01" placeholder="e.g., family-vault-01">
+                </div>
+                <div class="field">
+                    <label>Check-In Timer (Seconds)</label>
+                    <input type="number" id="timeoutSeconds" value="30" min="5" max="86400">
+                </div>
+            </div>
 
-        <button class="btn-red" onclick="attemptUnlock()">🔓 Attempt Emergency Unlock</button>
+            <div class="form-row">
+                <div class="field">
+                    <label>Owner Email</label>
+                    <input type="email" id="ownerEmail" value="owner@example.com" placeholder="you@domain.com">
+                </div>
+                <div class="field">
+                    <label>Beneficiary Alert Email</label>
+                    <input type="email" id="beneficiaryEmail" value="family@example.com" placeholder="nominee@domain.com">
+                </div>
+            </div>
 
-        <div id="unlockResultBox" class="result-box"></div>
-    </div>
-</div>
+            <div class="field">
+                <label>
+                    <span>Confidential Payload (Bank PINs / Recovery Seed)</span>
+                    <span style="color: var(--cyan); cursor: pointer;" onclick="toggleSecretVisibility()">👁️ Show / Hide</span>
+                </label>
+                <textarea id="secretPayload" rows="3" placeholder="Enter sensitive credentials to encrypt...">SBI Bank PIN: 4829 | Zerodha Password: Aarav@2026</textarea>
+            </div>
 
-<!-- ZERO-TRACE SECURITY SUITE MONITOR -->
-<div class="monitor-box">
-    <div class="monitor-header">
-        <strong style="color: #58a6ff;">📡 LIVE ZERO-KNOWLEDGE CRYPTO & VOLATILE MEMORY MONITOR</strong>
-        <div>
-            <span style="background: #0d1117; border: 1px solid #30363d; padding: 5px 10px; border-radius: 6px; font-size: 12px; margin-right: 8px;">
-                Anti-Coercion Duress Key: <code style="color: #f0883e;">DURESS-911</code>
-            </span>
-            <button onclick="speakUnlockedText()" style="width: auto; margin: 0; padding: 6px 12px; background: #1f6feb; color: #fff; font-size: 12px;">
-                🔊 Read Secrets Aloud (Zero-Storage)
-            </button>
+            <button class="btn btn-lock" onclick="createVault()">🔒 Encrypt & Seal Vault</button>
+
+            <!-- OFFLINE KEY SHARE B WITH AUTO-WIPING COPY -->
+            <div id="shareBContainer" class="key-card">
+                <div class="key-card-top">
+                    <span class="key-card-title">🔑 OFFLINE KEY SHARE B (NEVER STORED ON SERVER)</span>
+                    <button class="copy-btn" id="copyShareBtn" onclick="copyShareB()">📋 Copy Key</button>
+                </div>
+                <div class="key-value" id="shareBValue"></div>
+                <div class="clipboard-notice">
+                    <span>Hand over physically or air-gapped to your nominee.</span>
+                    <span id="clipboardTimerText" style="color: var(--amber); font-weight: 600;"></span>
+                </div>
+            </div>
+
+            <!-- DEAD-MAN'S SWITCH LIVE TELEMETRY -->
+            <div class="telemetry-card">
+                <div class="telemetry-header">
+                    <span class="status-pill" id="vaultStatusBadge">⚪ AWAITING VAULT</span>
+                    <span class="timer-digits"><span id="timeRemaining">--</span>s</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="timerProgressBar"></div>
+                </div>
+                <button class="btn btn-heartbeat" onclick="sendHeartbeat()">💓 Confirm Check-In (Reset Switch)</button>
+            </div>
+        </section>
+
+        <!-- RIGHT: FAMILY BENEFICIARY -->
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">👪 Family Beneficiary</div>
+                <span class="role-tag">Emergency Recovery</span>
+            </div>
+
+            <div class="info-callout">
+                <strong>Zero-Knowledge Protection:</strong> Decryption mathematically requires <strong>both</strong> Server Share A (released only after timer expiry) and your physical <strong>Key Share B</strong>.
+            </div>
+
+            <div class="field">
+                <label>Target Vault Identifier</label>
+                <input type="text" id="unlockVaultId" value="family-vault-01" placeholder="Enter Vault ID">
+            </div>
+
+            <div class="field">
+                <label>Beneficiary Key Share B</label>
+                <div class="input-group">
+                    <input type="password" id="unlockShareB" placeholder="Paste your offline Key Share B">
+                    <button type="button" class="input-action" onclick="toggleKeyInputVisibility()">Show</button>
+                </div>
+            </div>
+
+            <button class="btn btn-unlock" onclick="attemptUnlock()">🔓 Reconstruct Key & Unlock Vault</button>
+
+            <!-- UNLOCK RESULT PANEL -->
+            <div id="unlockResultBox" class="result-panel"></div>
+        </section>
+
+    </main>
+
+    <!-- LIVE CRYPTOGRAPHIC AUDIT CONSOLE -->
+    <section class="audit-section">
+        <div class="audit-header">
+            <div class="audit-title"><span class="live-dot"></span> LIVE ZERO-KNOWLEDGE CRYPTOGRAPHIC AUDIT LOG</div>
+            <span style="font-size: 11.5px; color: var(--text-muted);">Volatile RAM Mode • Zero Disk Writes</span>
         </div>
-    </div>
+        <div id="cryptoTraceLog" class="audit-console">
+            [SYSTEM] AegisVault Zero-Knowledge Engine initialized. Ready to split keys via XOR.<br>
+        </div>
+    </section>
 
-    <div id="cryptoTraceLog" class="trace-log">
-        [INIT] Volatile Browser RAM Mode Active — Zero plain-text files saved to device storage.<br>
-        [READY] Waiting for AES-128-CBC encryption or XOR key reconstruction event...<br>
-    </div>
+    <script>
+        let pollInterval = null;
+        let wipeTimer = null;
+        let clipboardClearTimer = null;
+        let totalConfiguredSeconds = 30;
+        let isSecretHidden = false;
 
-    <div id="ramWipeBanner" class="wipe-banner">
-        ⏳ <strong>VOLATILE RAM PROTECTION:</strong> Decrypted secrets will auto-wipe from screen in <span id="wipeSeconds">60</span>s to prevent shoulder-surfing.
-    </div>
-</div>
-
-<script>
-    let pollInterval = null;
-    let wipeTimer = null;
-
-    function logCryptoStep(msg) {
-        const log = document.getElementById('cryptoTraceLog');
-        const now = new Date().toLocaleTimeString();
-        log.innerHTML = `[${now}] ${msg}<br>` + log.innerHTML;
-    }
-
-    async function createVault() {
-        const vaultId = document.getElementById('ownerVaultId').value.trim();
-        const ownerEmail = document.getElementById('ownerEmail').value.trim();
-        const beneficiaryEmail = document.getElementById('beneficiaryEmail').value.trim();
-        const secret = document.getElementById('secretPayload').value;
-        const timeout = parseInt(document.getElementById('timeoutSeconds').value);
-
-        if (!vaultId || !ownerEmail || !beneficiaryEmail || !secret) {
-            alert("Please fill in Vault ID, Owner Email, Beneficiary Email, and Secret Payload.");
-            return;
+        function logCryptoStep(msg) {
+            const log = document.getElementById('cryptoTraceLog');
+            const now = new Date().toLocaleTimeString();
+            log.innerHTML = `[${now}] ${msg}<br>` + log.innerHTML;
         }
 
-        const formData = new FormData();
-        formData.append('vault_id', vaultId);
-        formData.append('owner_email', ownerEmail);
-        formData.append('beneficiary_email', beneficiaryEmail);
-        formData.append('secret', secret);
-        formData.append('timeout_sec', timeout);
-
-        const res = await fetch('/vault/create', {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-            document.getElementById('shareBContainer').style.display = 'block';
-            document.getElementById('shareBValue').innerText = data.beneficiary_key_share_B;
-            document.getElementById('unlockVaultId').value = vaultId;
-            document.getElementById('unlockResultBox').style.display = 'none';
-
-            logCryptoStep("🔐 [STEP 1: AES-128-CBC] Plaintext encrypted into unreadable ciphertext.");
-            logCryptoStep("🔀 [STEP 2: XOR SPLIT] MasterKey ^ ShareB = ShareA -> ShareA stored in Redis; ShareB air-gapped.");
-
-            startStatusPolling(vaultId);
-        } else {
-            alert("Error creating vault: " + JSON.stringify(data.detail || data));
-        }
-    }
-
-    function startStatusPolling(vaultId) {
-        if (pollInterval) clearInterval(pollInterval);
-        checkVaultStatus(vaultId);
-        pollInterval = setInterval(() => checkVaultStatus(vaultId), 1000);
-    }
-
-    async function checkVaultStatus(vaultId) {
-        const res = await fetch(`/vault/${vaultId}/status`);
-        if (!res.ok) return;
-        const data = await res.json();
-
-        const badge = document.getElementById('vaultStatusBadge');
-        const timeSpan = document.getElementById('timeRemaining');
-        timeSpan.innerText = data.seconds_remaining;
-
-        if (data.status === 'ACTIVE') {
-            badge.innerHTML = `<span style="color:#3fb950;">🟢 ACTIVE (LOCKED)</span>`;
-        } else {
-            badge.innerHTML = `<span style="color:#f85149;">🔴 EXPIRED (READY FOR UNLOCK)</span>`;
-        }
-    }
-
-    async function sendHeartbeat() {
-        const vaultId = document.getElementById('ownerVaultId').value.trim();
-        const res = await fetch(`/vault/${vaultId}/checkin`, { method: 'POST' });
-        if (res.ok) {
-            logCryptoStep("💓 [HEARTBEAT] Owner check-in confirmed -> Watchdog countdown reset in Redis.");
-            checkVaultStatus(vaultId);
-        } else {
-            alert("Create a vault first!");
-        }
-    }
-
-    async function attemptUnlock() {
-        const vaultId = document.getElementById('unlockVaultId').value.trim();
-        const shareB = document.getElementById('unlockShareB').value.trim();
-        const resultBox = document.getElementById('unlockResultBox');
-
-        if (!vaultId || !shareB) {
-            alert("Enter both Vault ID and Offline Key Share B.");
-            return;
+        function toggleSecretVisibility() {
+            const area = document.getElementById('secretPayload');
+            isSecretHidden = !isSecretHidden;
+            area.style.webkitTextSecurity = isSecretHidden ? 'disc' : 'none';
         }
 
-        // Anti-Coercion Duress Decoy Vault ("DURESS-911")
-        if (shareB.toUpperCase() === 'DURESS-911') {
-            resultBox.style.display = 'block';
-            resultBox.className = 'result-box result-success';
-            resultBox.innerHTML = `<strong>✅ VAULT UNLOCKED (VERIFIED)</strong>\n\nBank: State Bank of India (Savings)\nAccount No: 30918472610 (IFSC: SBIN0004122)\nATM PIN: 4920 | NetBanking: Ravi@1998\nAvailable Balance: ₹1,420.00`;
-            logCryptoStep("⚠️ [DURESS TRIGGERED] Coercion key 'DURESS-911' detected -> Served decoy vault; real Share A untouched.");
-            startVolatileWipeCountdown();
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('share_b', shareB);
-
-        const res = await fetch(`/vault/${vaultId}/unlock`, {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await res.json();
-        resultBox.style.display = 'block';
-
-        if (res.status === 200) {
-            resultBox.className = 'result-box result-success';
-            resultBox.innerHTML = `<strong>✅ VAULT UNLOCKED (ZERO-KNOWLEDGE VERIFIED)</strong>\n\n${data.decrypted_secrets}`;
-            logCryptoStep("🔓 [XOR RESTORED - HTTP 200] ShareA ^ ShareB = MasterKey -> AES-128 decrypted in volatile RAM.");
-            startVolatileWipeCountdown();
-        } else if (res.status === 403) {
-            resultBox.className = 'result-box result-error';
-            resultBox.innerHTML = `<strong>⛔ 403 ACCESS DENIED</strong>\n${data.detail}`;
-            logCryptoStep("⛔ [BLOCKED - HTTP 403] Timer is still ACTIVE. Server refused XOR key reconstruction.");
-        } else {
-            resultBox.className = 'result-box result-error';
-            resultBox.innerHTML = `<strong>❌ UNLOCK FAILED (${res.status})</strong>\n${data.detail}`;
-            logCryptoStep(`❌ [REJECTED - HTTP ${res.status}] Invalid Key Share B or Vault ID.`);
-        }
-    }
-
-    function speakUnlockedText() {
-        const resultBox = document.getElementById('unlockResultBox');
-        if (resultBox.style.display === 'none' || !resultBox.innerText.includes('VAULT UNLOCKED')) {
-            alert("Unlock a vault first so the voice assistant can read the instructions aloud.");
-            return;
-        }
-        window.speechSynthesis.cancel();
-        const speech = new SpeechSynthesisUtterance(resultBox.innerText);
-        speech.rate = 0.95;
-        window.speechSynthesis.speak(speech);
-        logCryptoStep("🔊 [ACCESSIBILITY] Voice readout active via browser SpeechSynthesis (zero disk write).");
-    }
-
-    function startVolatileWipeCountdown() {
-        const banner = document.getElementById('ramWipeBanner');
-        const secSpan = document.getElementById('wipeSeconds');
-        const resultBox = document.getElementById('unlockResultBox');
-        let timeLeft = 60;
-
-        banner.style.display = 'block';
-        secSpan.innerText = timeLeft;
-
-        if (wipeTimer) clearInterval(wipeTimer);
-        wipeTimer = setInterval(() => {
-            timeLeft--;
-            secSpan.innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(wipeTimer);
-                resultBox.className = 'result-box result-error';
-                resultBox.innerHTML = `<strong>🔒 VOLATILE RAM WIPED</strong>\nScreen cleared automatically after 60 seconds for privacy.`;
-                banner.style.display = 'none';
-                logCryptoStep("🧹 [RAM SCRUBBED] Decrypted secrets wiped from browser memory after 60s timeout.");
+        function toggleKeyInputVisibility() {
+            const inp = document.getElementById('unlockShareB');
+            const btn = inp.nextElementSibling;
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                btn.innerText = 'Hide';
+            } else {
+                inp.type = 'password';
+                btn.innerText = 'Show';
             }
-        }, 1000);
-    }
-</script>
+        }
 
+        // Secure Copy with 30-Second Automatic Clipboard Wipe
+        async function copyShareB() {
+            const keyText = document.getElementById('shareBValue').innerText.trim();
+            if (!keyText) return;
+
+            try {
+                await navigator.clipboard.writeText(keyText);
+                const btn = document.getElementById('copyShareBtn');
+                const timerText = document.getElementById('clipboardTimerText');
+                btn.innerText = '✅ Copied!';
+                logCryptoStep("📋 [CLIPBOARD] Key Share B copied to RAM clipboard. Auto-wipe scheduled in 30s.");
+
+                let clipLeft = 30;
+                timerText.innerText = `Clipboard auto-clears in ${clipLeft}s`;
+
+                if (clipboardClearTimer) clearInterval(clipboardClearTimer);
+                clipboardClearTimer = setInterval(async () => {
+                    clipLeft--;
+                    if (clipLeft > 0) {
+                        timerText.innerText = `Clipboard auto-clears in ${clipLeft}s`;
+                    } else {
+                        clearInterval(clipboardClearTimer);
+                        try { await navigator.clipboard.writeText(''); } catch (e) {}
+                        btn.innerText = '📋 Copy Key';
+                        timerText.innerText = 'Clipboard scrubbed';
+                        logCryptoStep("🧹 [CLIPBOARD WIPED] Key Share B cleared from system clipboard memory.");
+                    }
+                }, 1000);
+            } catch (err) {
+                alert("Clipboard permission blocked by browser. Please select and copy manually.");
+            }
+        }
+
+        async function createVault() {
+            const vaultId = document.getElementById('ownerVaultId').value.trim();
+            const ownerEmail = document.getElementById('ownerEmail').value.trim();
+            const beneficiaryEmail = document.getElementById('beneficiaryEmail').value.trim();
+            const secret = document.getElementById('secretPayload').value;
+            const timeout = parseInt(document.getElementById('timeoutSeconds').value);
+
+            if (!vaultId || !ownerEmail || !beneficiaryEmail || !secret) {
+                alert("Please fill in all fields before locking the vault.");
+                return;
+            }
+
+            totalConfiguredSeconds = timeout;
+
+            const formData = new FormData();
+            formData.append('vault_id', vaultId);
+            formData.append('owner_email', ownerEmail);
+            formData.append('beneficiary_email', beneficiaryEmail);
+            formData.append('secret', secret);
+            formData.append('timeout_sec', timeout);
+
+            const res = await fetch('/vault/create', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('shareBContainer').style.display = 'block';
+                document.getElementById('shareBValue').innerText = data.beneficiary_key_share_B;
+                document.getElementById('unlockVaultId').value = vaultId;
+                document.getElementById('unlockResultBox').style.display = 'none';
+                document.getElementById('copyShareBtn').innerText = '📋 Copy Key';
+                document.getElementById('clipboardTimerText').innerText = '';
+
+                logCryptoStep("🔐 [AES-128-CBC] Payload encrypted into ciphertext.");
+                logCryptoStep("🔀 [XOR KEY SPLIT] MasterKey ^ ShareB = ShareA -> ShareA stored in Redis; ShareB air-gapped.");
+
+                startStatusPolling(vaultId);
+            } else {
+                alert("Error creating vault: " + JSON.stringify(data.detail || data));
+            }
+        }
+
+        function startStatusPolling(vaultId) {
+            if (pollInterval) clearInterval(pollInterval);
+            checkVaultStatus(vaultId);
+            pollInterval = setInterval(() => checkVaultStatus(vaultId), 1000);
+        }
+
+        async function checkVaultStatus(vaultId) {
+            const res = await fetch(`/vault/${vaultId}/status`);
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const badge = document.getElementById('vaultStatusBadge');
+            const timeSpan = document.getElementById('timeRemaining');
+            const bar = document.getElementById('timerProgressBar');
+
+            const rem = data.seconds_remaining;
+            timeSpan.innerText = rem;
+
+            const pct = Math.min(100, Math.max(0, (rem / totalConfiguredSeconds) * 100));
+            bar.style.width = pct + '%';
+
+            if (data.status === 'ACTIVE') {
+                badge.className = 'status-pill active';
+                badge.innerText = '🟢 ACTIVE (LOCKED)';
+                bar.style.background = rem <= 5
+                    ? 'linear-gradient(90deg, #f59e0b, #f43f5e)'
+                    : 'linear-gradient(90deg, #10b981, #38bdf8)';
+            } else {
+                badge.className = 'status-pill expired';
+                badge.innerText = '🔴 EXPIRED (UNLOCKABLE)';
+                bar.style.width = '0%';
+            }
+        }
+
+        async function sendHeartbeat() {
+            const vaultId = document.getElementById('ownerVaultId').value.trim();
+            const res = await fetch(`/vault/${vaultId}/checkin`, { method: 'POST' });
+            if (res.ok) {
+                logCryptoStep("💓 [HEARTBEAT] Owner check-in verified -> Dead-Man's Switch timer reset.");
+                checkVaultStatus(vaultId);
+            } else {
+                alert("Please lock a vault first.");
+            }
+        }
+
+        async function attemptUnlock() {
+            const vaultId = document.getElementById('unlockVaultId').value.trim();
+            const shareB = document.getElementById('unlockShareB').value.trim();
+            const resultBox = document.getElementById('unlockResultBox');
+
+            if (!vaultId || !shareB) {
+                alert("Enter both Target Vault ID and Key Share B.");
+                return;
+            }
+
+            // Silent Anti-Coercion Duress Protection (Zero UI hints)
+            if (shareB.toUpperCase() === 'DURESS-911') {
+                renderUnlockedSecrets("Bank: State Bank of India (Savings)\nAccount No: 30918472610 (IFSC: SBIN0004122)\nATM PIN: 4920 | NetBanking: Ravi@1998\nAvailable Balance: ₹1,420.00");
+                logCryptoStep("🔓 [XOR RESTORED] Key reconstruction complete -> Vault decrypted in volatile RAM.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('share_b', shareB);
+
+            const res = await fetch(`/vault/${vaultId}/unlock`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (res.status === 200) {
+                renderUnlockedSecrets(data.decrypted_secrets);
+                logCryptoStep("🔓 [XOR RESTORED - HTTP 200] ShareA ^ ShareB = MasterKey -> Decrypted in volatile RAM.");
+            } else if (res.status === 403) {
+                resultBox.style.display = 'block';
+                resultBox.className = 'result-panel error';
+                resultBox.innerHTML = `<strong>⛔ ACCESS DENIED (HTTP 403)</strong><br>${data.detail}`;
+                logCryptoStep("⛔ [SECURITY BLOCK - HTTP 403] Owner timer is still active. Unlock refused.");
+            } else {
+                resultBox.style.display = 'block';
+                resultBox.className = 'result-panel error';
+                resultBox.innerHTML = `<strong>❌ DECRYPTION FAILED (HTTP ${res.status})</strong><br>${data.detail}`;
+                logCryptoStep(`❌ [AUTH FAILED - HTTP ${res.status}] Invalid Key Share B or Vault ID.`);
+            }
+        }
+
+        function renderUnlockedSecrets(secretText) {
+            const resultBox = document.getElementById('unlockResultBox');
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-panel success';
+            resultBox.innerHTML = `
+                <strong>✅ VAULT UNLOCKED — VOLATILE RAM VIEW</strong>
+                <div class="decrypted-content" id="decryptedTextArea">${secretText}</div>
+                <div class="result-actions">
+                    <span>⏳ Auto-wipes in <strong id="wipeSeconds">60</strong>s</span>
+                    <button type="button" class="voice-btn" onclick="speakUnlockedText()">🔊 Read Aloud</button>
+                </div>
+            `;
+            startVolatileWipeCountdown();
+        }
+
+        function speakUnlockedText() {
+            const area = document.getElementById('decryptedTextArea');
+            if (!area) return;
+            window.speechSynthesis.cancel();
+            const speech = new SpeechSynthesisUtterance(area.innerText);
+            speech.rate = 0.95;
+            window.speechSynthesis.speak(speech);
+            logCryptoStep("🔊 [VOICE ASSIST] Reading decrypted payload aloud (zero disk write).");
+        }
+
+        function startVolatileWipeCountdown() {
+            let timeLeft = 60;
+            if (wipeTimer) clearInterval(wipeTimer);
+
+            wipeTimer = setInterval(() => {
+                timeLeft--;
+                const secEl = document.getElementById('wipeSeconds');
+                if (secEl) secEl.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(wipeTimer);
+                    const resultBox = document.getElementById('unlockResultBox');
+                    resultBox.className = 'result-panel error';
+                    resultBox.innerHTML = `<strong>🔒 VOLATILE RAM SCRUBBED</strong><br>Screen cleared automatically after 60 seconds to protect against shoulder-surfing.`;
+                    logCryptoStep("🧹 [RAM SCRUBBED] Decrypted payload wiped from browser memory after 60s.");
+                }
+            }, 1000);
+        }
+    </script>
 </body>
 </html>
