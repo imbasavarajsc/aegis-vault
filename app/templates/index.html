@@ -247,7 +247,7 @@
             return;
         }
 
-        const res = await fetch('/api/vault/create', {
+        const res = await fetch('/vault/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -281,7 +281,7 @@
     }
 
     async function checkVaultStatus(vaultId) {
-        const res = await fetch(`/api/vault/${vaultId}/status`);
+        const res = await fetch(`/vault/${vaultId}/status`);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -298,7 +298,7 @@
 
     async function sendHeartbeat() {
         const vaultId = document.getElementById('ownerVaultId').value.trim();
-        const res = await fetch(`/api/vault/${vaultId}/heartbeat`, { method: 'POST' });
+        const res = await fetch(`/vault/${vaultId}/heartbeat`, { method: 'POST' });
         if (res.ok) {
             logCryptoStep("💓 [HEARTBEAT] Owner check-in confirmed -> Watchdog countdown reset in Redis.");
             checkVaultStatus(vaultId);
@@ -327,7 +327,7 @@
             return;
         }
 
-        const res = await fetch(`/api/vault/${vaultId}/unlock`, {
+        const res = await fetch(`/vault/${vaultId}/unlock`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ share_b: shareB })
