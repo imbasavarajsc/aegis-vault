@@ -157,6 +157,9 @@
         <label>Vault ID</label>
         <input type="text" id="ownerVaultId" value="demo-vault" placeholder="e.g., family-vault-01">
 
+        <label>Owner Email</label>
+        <input type="email" id="ownerEmail" value="owner@example.com" placeholder="owner@email.com">
+
         <label>Beneficiary Email (Alert Target)</label>
         <input type="email" id="beneficiaryEmail" value="family@example.com" placeholder="nominee@email.com">
 
@@ -238,30 +241,32 @@
 
     async function createVault() {
         const vaultId = document.getElementById('ownerVaultId').value.trim();
-        const email = document.getElementById('beneficiaryEmail').value.trim();
+        const ownerEmail = document.getElementById('ownerEmail').value.trim();
+        const beneficiaryEmail = document.getElementById('beneficiaryEmail').value.trim();
         const secret = document.getElementById('secretPayload').value;
         const timeout = parseInt(document.getElementById('timeoutSeconds').value);
 
-        if (!vaultId || !secret) {
-            alert("Please enter a Vault ID and Secret Payload.");
+        if (!vaultId || !ownerEmail || !beneficiaryEmail || !secret) {
+            alert("Please fill in Vault ID, Owner Email, Beneficiary Email, and Secret Payload.");
             return;
         }
 
+        const formData = new FormData();
+        formData.append('vault_id', vaultId);
+        formData.append('owner_email', ownerEmail);
+        formData.append('beneficiary_email', beneficiaryEmail);
+        formData.append('secret', secret);
+        formData.append('timeout_sec', timeout);
+
         const res = await fetch('/vault/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                vault_id: vaultId,
-                beneficiary_email: email,
-                secret_data: secret,
-                timeout_seconds: timeout
-            })
+            body: formData
         });
 
         const data = await res.json();
         if (res.ok) {
             document.getElementById('shareBContainer').style.display = 'block';
-            document.getElementById('shareBValue').innerText = data.share_b;
+            document.getElementById('shareBValue').innerText = data.beneficiary_key_share_B;
             document.getElementById('unlockVaultId').value = vaultId;
             document.getElementById('unlockResultBox').style.display = 'none';
 
@@ -270,7 +275,7 @@
 
             startStatusPolling(vaultId);
         } else {
-            alert("Error creating vault: " + (data.detail || "Unknown error"));
+            alert("Error creating vault: " + JSON.stringify(data.detail || data));
         }
     }
 
@@ -287,7 +292,7 @@
 
         const badge = document.getElementById('vaultStatusBadge');
         const timeSpan = document.getElementById('timeRemaining');
-        timeSpan.innerText = data.remaining_seconds;
+        timeSpan.innerText = data.seconds_remaining;
 
         if (data.status === 'ACTIVE') {
             badge.innerHTML = `<span style="color:#3fb950;">🟢 ACTIVE (LOCKED)</span>`;
@@ -298,7 +303,7 @@
 
     async function sendHeartbeat() {
         const vaultId = document.getElementById('ownerVaultId').value.trim();
-        const res = await fetch(`/vault/${vaultId}/heartbeat`, { method: 'POST' });
+        const res = await fetch(`/vault/${vaultId}/checkin`, { method: 'POST' });
         if (res.ok) {
             logCryptoStep("💓 [HEARTBEAT] Owner check-in confirmed -> Watchdog countdown reset in Redis.");
             checkVaultStatus(vaultId);
@@ -327,10 +332,12 @@
             return;
         }
 
+        const formData = new FormData();
+        formData.append('share_b', shareB);
+
         const res = await fetch(`/vault/${vaultId}/unlock`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ share_b: shareB })
+            body: formData
         });
 
         const data = await res.json();
@@ -338,7 +345,7 @@
 
         if (res.status === 200) {
             resultBox.className = 'result-box result-success';
-            resultBox.innerHTML = `<strong>✅ VAULT UNLOCKED (ZERO-KNOWLEDGE VERIFIED)</strong>\n\n${data.decrypted_secret}`;
+            resultBox.innerHTML = `<strong>✅ VAULT UNLOCKED (ZERO-KNOWLEDGE VERIFIED)</strong>\n\n${data.decrypted_secrets}`;
             logCryptoStep("🔓 [XOR RESTORED - HTTP 200] ShareA ^ ShareB = MasterKey -> AES-128 decrypted in volatile RAM.");
             startVolatileWipeCountdown();
         } else if (res.status === 403) {
