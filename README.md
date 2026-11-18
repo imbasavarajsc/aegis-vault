@@ -11,3 +11,5 @@ A containerized emergency continuity platform built for **Collaborative Developm
 ## 🛠️ Quick Start (Docker Compose)
 ```bash
 docker compose up --build -d
+```
+Team Members: Athishay K, Basavaraj, Bharath NS, Manjunath, Harsha.
