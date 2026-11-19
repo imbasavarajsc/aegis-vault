@@ -113,7 +113,7 @@
         .node-server { background: rgba(56, 189, 248, 0.15); color: var(--cyan); }
         .node-offline { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
 
-        /* Mobile Role Switcher Bar (Hidden on Laptop, Shown on Mobile) */
+        /* Mobile Role Switcher Bar */
         .mobile-tabs {
             display: none;
             max-width: 1220px;
@@ -212,6 +212,8 @@
         @media (max-width: 540px) {
             .two-col { grid-template-columns: 1fr; }
             .vault-card { padding: 18px; }
+            .checkin-row { flex-direction: column; align-items: stretch; }
+            .checkin-row button { width: 100%; }
         }
 
         .field-group { margin-bottom: 14px; }
@@ -241,7 +243,7 @@
             box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
         }
 
-        /* Inline Hide/Show Wrapper for Both Owner & Beneficiary */
+        /* Inline Hide/Show Wrapper */
         .input-wrapper {
             position: relative;
             display: flex;
@@ -323,7 +325,6 @@
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.45);
             color: var(--emerald);
-            margin-top: 10px;
         }
 
         .btn-pulse:hover {
@@ -471,6 +472,26 @@
             background: rgba(244, 63, 94, 0.15);
             color: var(--rose);
             border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .checkin-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .checkin-row input {
+            padding: 9px 10px;
+            font-size: 12.5px;
+            flex: 1;
+        }
+
+        .checkin-row button {
+            width: auto;
+            padding: 9px 14px;
+            font-size: 13px;
+            white-space: nowrap;
         }
 
         /* Beneficiary Side */
@@ -639,7 +660,7 @@
         </div>
     </header>
 
-    <!-- MOBILE ROLE SWITCHER (VISIBLE ONLY ON PHONES/TABLETS) -->
+    <!-- MOBILE ROLE SWITCHER -->
     <nav class="mobile-tabs">
         <button type="button" class="mobile-tab-btn active" id="tabOwnerBtn" onclick="switchMobileRole('owner')">👤 Vault Owner</button>
         <button type="button" class="mobile-tab-btn" id="tabBeneficiaryBtn" onclick="switchMobileRole('beneficiary')">👪 Family Beneficiary</button>
@@ -686,7 +707,7 @@
                     </div>
                 </div>
 
-                <!-- STEALTH DURESS CONFIGURATION (HIDDEN FROM BENEFICIARY PANEL) -->
+                <!-- STEALTH DURESS CONFIGURATION -->
                 <details class="stealth-config">
                     <summary>⚙️ Optional: Configure Stealth Duress Decoy (Anti-Coercion)</summary>
                     <div class="two-col" style="margin-top: 10px;">
@@ -717,7 +738,7 @@
                 </div>
             </div>
 
-            <!-- CIRCULAR SVG DEAD-MAN'S SWITCH REACTOR -->
+            <!-- CIRCULAR SVG DEAD-MAN'S SWITCH REACTOR + DEDICATED CHECK-IN BOX -->
             <div class="reactor-panel">
                 <div class="ring-wrap">
                     <svg viewBox="0 0 76 76">
@@ -729,7 +750,10 @@
                 <div class="reactor-info">
                     <span class="status-tag" id="vaultStatusBadge">⚪ AWAITING VAULT</span>
                     <div style="font-size: 12px; color: var(--text-dim);">Watchdog monitors heartbeat TTL in Redis.</div>
-                    <button class="btn-action btn-pulse" onclick="sendHeartbeat()">💓 Confirm Check-In (Reset Switch)</button>
+                    <div class="checkin-row">
+                        <input type="text" id="checkinVaultId" value="family-vault-01" placeholder="Vault ID to check-in">
+                        <button class="btn-action btn-pulse" onclick="sendHeartbeat()">💓 Check-In</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -764,7 +788,7 @@
                 <div id="unlockResultBox" class="unlock-output"></div>
             </div>
 
-            <!-- DUAL-CONDITION RECOVERY GATE STATUS (BALANCES CARD HEIGHT) -->
+            <!-- DUAL-CONDITION RECOVERY GATE STATUS -->
             <div class="gate-checklist">
                 <div class="gate-title">🔐 Dual-Condition Cryptographic Gate</div>
                 <div class="gate-item">
@@ -797,6 +821,7 @@
         let clipboardTimer = null;
         let maxTimeout = 30;
         let isOwnerSecretHidden = false;
+        let warningAlertSent = false;
 
         function switchMobileRole(role) {
             const ownerCard = document.getElementById('ownerCard');
@@ -825,6 +850,7 @@
 
         function syncVaultId(val) {
             document.getElementById('unlockVaultId').value = val;
+            document.getElementById('checkinVaultId').value = val;
         }
 
         function toggleOwnerSecretVisibility(btn) {
@@ -856,7 +882,6 @@
             }
         }
 
-        // Universal Copy (Works on HTTPS Tunnels AND HTTP Local Mobile Hotspots)
         function writeClipboardUniversal(text) {
             if (navigator.clipboard && window.isSecureContext) {
                 return navigator.clipboard.writeText(text);
@@ -919,6 +944,7 @@
             }
 
             maxTimeout = timeout;
+            warningAlertSent = false;
 
             const formData = new FormData();
             formData.append('vault_id', vaultId);
@@ -937,6 +963,7 @@
                 document.getElementById('shareBContainer').style.display = 'block';
                 document.getElementById('shareBValue').innerText = data.beneficiary_key_share_B;
                 document.getElementById('unlockVaultId').value = vaultId;
+                document.getElementById('checkinVaultId').value = vaultId;
                 document.getElementById('unlockResultBox').style.display = 'none';
                 document.getElementById('copyShareBtn').innerText = '📋 Copy Key';
                 document.getElementById('clipboardStatus').innerText = '';
@@ -975,10 +1002,16 @@
             if (data.status === 'ACTIVE') {
                 badge.className = 'status-tag active';
                 badge.innerText = '🟢 ACTIVE (LOCKED)';
-                ring.style.stroke = rem <= 5 ? '#f59e0b' : '#10b981';
+                ring.style.stroke = rem <= 10 ? '#f59e0b' : '#10b981';
                 document.getElementById('bridgeSymbol').innerHTML = '⊕ <span style="color:#f43f5e;">SEALED</span> ⊕';
                 gateTimer.style.color = '#f43f5e';
                 gateTimer.innerText = `🔒 Locked (${rem}s left)`;
+
+                if (rem <= 10 && rem > 0 && !warningAlertSent) {
+                    warningAlertSent = true;
+                    const ownerMail = document.getElementById('ownerEmail').value.trim() || 'owner@example.com';
+                    logEvent(`📧 [PRE-EXPIRY ALERT] Warning email dispatched to ${ownerMail} (${rem}s left — Check in now to prevent unlock!).`);
+                }
             } else {
                 badge.className = 'status-tag expired';
                 badge.innerText = '🔴 EXPIRED (READY)';
@@ -991,13 +1024,18 @@
         }
 
         async function sendHeartbeat() {
-            const vaultId = document.getElementById('ownerVaultId').value.trim();
+            const vaultId = document.getElementById('checkinVaultId').value.trim();
+            if (!vaultId) {
+                alert("Enter a Vault ID to check in.");
+                return;
+            }
             const res = await fetch(`/vault/${vaultId}/checkin`, { method: 'POST' });
             if (res.ok) {
-                logEvent("💓 [HEARTBEAT] Owner check-in verified -> Watchdog countdown reset.");
-                pollStatus(vaultId);
+                warningAlertSent = false;
+                logEvent(`💓 [HEARTBEAT] Check-in verified for '${vaultId}' -> Watchdog countdown reset.`);
+                startPolling(vaultId);
             } else {
-                alert("Seal a vault first before sending a heartbeat.");
+                alert("Vault ID not found. Create the vault first.");
             }
         }
 
